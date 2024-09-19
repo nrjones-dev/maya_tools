@@ -24,7 +24,7 @@ def clean_detach():
         for obj in new_objects:
             maya.xform(centerPivots=True)
 
-        print(f"Faces have been separated into a new object")
+        print("Faces have been separated into a new object")
     else:
         print("Please select faces from a polygonal object.")
 
@@ -44,3 +44,5 @@ def set_obj_world_space():
         return
 
     maya.move(0, 0, 0, selection, rpr=True)
+
+
