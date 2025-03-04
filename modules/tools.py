@@ -50,3 +50,14 @@ def select_every_other_face():
     shape = maya.ls(selection=True)
     shape_faces = maya.ls(f"{shape[0]}.f[*]", flatten=True)
     face_selection = maya.select(shape_faces[::2])
+
+
+def select_faces_with_material(obj, material):
+    sg = maya.listConnections(material, type="shadingEngine")
+    if sg:
+        faces = [f for f in maya.sets(sg, q=True) or [] if f.startswith(obj + ".")]
+        maya.select(faces) if faces else print("No matching faces found.")
+
+
+# Example usage
+select_faces_with_material("pCube1", "lambert1")
