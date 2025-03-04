@@ -50,6 +50,7 @@ def select_every_other_face():
     shape = maya.ls(selection=True)
     shape_faces = maya.ls(f"{shape[0]}.f[*]", flatten=True)
     face_selection = maya.select(shape_faces[::2])
+    print(face_selection)
 
 
 def select_faces_with_material(obj, material):
