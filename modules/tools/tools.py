@@ -58,10 +58,10 @@ def select_every_other_face():
 
 
 def select_faces_with_material(obj, material):
-    sg = maya.listConnections(material, type="shadingEngine")
+    sg = m.listConnections(material, type="shadingEngine")
     if sg:
-        faces = [f for f in maya.sets(sg, q=True) or [] if f.startswith(obj + ".")]
-        maya.select(faces) if faces else print("No matching faces found.")
+        faces = [f for f in m.sets(sg, q=True) or [] if f.startswith(obj + ".")]
+        m.select(faces) if faces else print("No matching faces found.")
 
 
 # Example usage
