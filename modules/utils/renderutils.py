@@ -5,8 +5,8 @@ def append_diffuse_to_render_layers(suffix=None, skip_master_layer=True):
     """
     Appends a suffix to the names of render layers in Maya's Render Setup.
 
-    :param suffix: The suffix to append (default: "Diffuse")
-    :param skip_master_layer: Whether to skip the defaultRenderLayer
+    :param suffix: The suffix to append (default: "None")
+    :param skip_master_layer: Whether to skip the defaultRenderLayer (default: True)
     :return: List of tuples (old_name, new_name) of renamed layers
     """
     if not isinstance(suffix, str) or not suffix:
@@ -35,15 +35,9 @@ def append_diffuse_to_render_layers(suffix=None, skip_master_layer=True):
             print(f"Failed to rename {layer_name}: {e}")
 
 
-append_diffuse_to_render_layers(suffix="")
-
-
 def count_render_layers():
     rs = renderSetup.instance()
     all_layers = rs.getRenderLayers()
     total_layers = len(all_layers)
     print("Total Render Layers:", total_layers)
     return total_layers
-
-
-count_render_layers()
