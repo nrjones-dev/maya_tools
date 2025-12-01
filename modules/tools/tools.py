@@ -62,7 +62,3 @@ def select_faces_with_material(obj, material):
     if sg:
         faces = [f for f in m.sets(sg, q=True) or [] if f.startswith(obj + ".")]
         m.select(faces) if faces else print("No matching faces found.")
-
-
-# Example usage
-select_faces_with_material("pCube1", "lambert1")

@@ -35,15 +35,9 @@ def append_diffuse_to_render_layers(suffix=None, skip_master_layer=True):
             print(f"Failed to rename {layer_name}: {e}")
 
 
-append_diffuse_to_render_layers(suffix="")
-
-
 def count_render_layers():
     rs = renderSetup.instance()
     all_layers = rs.getRenderLayers()
     total_layers = len(all_layers)
     print("Total Render Layers:", total_layers)
     return total_layers
-
-
-count_render_layers()
