@@ -1,56 +1,60 @@
-import maya.cmds as maya
+import maya.cmds as m
 
 
 def clean_combine():
-    curr_selection = maya.ls(selection=True)
-    maya.polyUnite(curr_selection, constructionHistory=False)
-    print("Test")
+    curr_selection = m.ls(selection=True)
+    try:
+        m.polyUnite(curr_selection, constructionHistory=False)
+        m.xform(centerPivots=True)
+        m.warning("objects have been merged.")
+    except RuntimeError:
+        m.error("Invalid Selection. Combine needs at least 2 polygonal objects selected.")
 
 
 def clean_detach():
-    selection = maya.ls(selection=True)
+    selection = m.ls(selection=True)
 
     # Ensure that the selection consists of faces
-    if selection and all(".f[" in s for s in selection):
-        original_object = selection[0].split(".")[0]
+    try:
+        if selection and all(".f[" in s for s in selection):
+            original_object = selection[0].split(".")[0]
 
-        separated_objects = maya.polySeparate(original_object, rs=True, ch=False)
+            separated_objects = m.polySeparate(original_object, rs=True, ch=False)
 
-        maya.parent(maya.ls(selection=True), world=True)
-        maya.delete(original_object, ch=False)
-        maya.select(separated_objects[:-1])
+            m.parent(m.ls(selection=True), world=True)
+            m.delete(original_object, ch=False)
+            m.select(separated_objects[:-1])
 
-        new_objects = maya.ls(selection=True)
-        for obj in new_objects:
-            maya.xform(centerPivots=True)
+            new_objects = m.ls(selection=True)
+            for obj in new_objects:
+                m.xform(centerPivots=True)
 
-        print("Faces have been separated into a new object")
-    else:
-        print("Please select faces from a polygonal object.")
+            m.warning("Faces have been separated into a new object")
+    except RuntimeError:
+        m.error("Invalid Selection. Please select faces from a polygonal object.")
 
 
 def set_pivot_world_space():
-    selection = maya.ls(selection=True)
+    selection = m.ls(selection=True)
 
     if not selection:
         return
-    maya.xform(selection, pivots=(0, 0, 0), worldSpace=True)
+    m.xform(selection, pivots=(0, 0, 0), worldSpace=True)
 
 
 def set_obj_world_space():
-    selection = maya.ls(selection=True)
+    selection = m.ls(selection=True)
 
     if not selection:
         return
 
-    maya.move(0, 0, 0, selection, rpr=True)
+    m.move(0, 0, 0, selection, rpr=True)
 
 
 def select_every_other_face():
-    shape = maya.ls(selection=True)
-    shape_faces = maya.ls(f"{shape[0]}.f[*]", flatten=True)
-    face_selection = maya.select(shape_faces[::2])
-    print(face_selection)
+    shape = m.ls(selection=True)
+    shape_faces = m.ls(f"{shape[0]}.f[*]", flatten=True)
+    face_selection = m.select(shape_faces[::2])
 
 
 def select_faces_with_material(obj, material):
