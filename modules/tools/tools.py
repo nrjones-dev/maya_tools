@@ -60,3 +60,28 @@ def select_faces_with_material(obj, material):
     if sg:
         faces = [f for f in maya.sets(sg, q=True) or [] if f.startswith(obj + ".")]
         maya.select(faces) if faces else print("No matching faces found.")
+
+
+def change_outliner_colour(colour):
+    COLOURS = {
+        "green": (0, 1, 0),
+        "red": (1, 0, 0),
+    }
+
+    colour = colour.strip().lower()
+    rgb = COLOURS.get(colour)
+    if not rgb:
+        maya.warning(f"Unknown colour: {colour}")
+        return
+
+    root = maya.ls(selection=True, type="transform")
+    if not root:
+        maya.warning("Select a group")
+        return
+
+    # only targeting direct children, not recursive.
+    root_children = maya.listRelatives(root[0], children=True, type="transform") or []
+    for node in root_children:
+        if not maya.listRelatives(node, shapes=True):
+            maya.setAttr(f"{node}.useOutlinerColor", 1)
+            maya.setAttr(f"{node}.outlinerColor", *rgb)
