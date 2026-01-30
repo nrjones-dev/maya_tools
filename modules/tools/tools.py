@@ -55,18 +55,30 @@ def select_every_other_face():
     return face_selection
 
 
-def select_faces_with_material(obj, material):
+def select_faces_with_material(material):
+    selection = maya.ls(selection=True, type="transform")
+    if not selection:
+        maya.warning("Please select one or more mesh objects.")
+        return
+
     sg = maya.listConnections(material, type="shadingEngine")
-    if sg:
+    if not sg:
+        maya.warning(f"No shadingEngine found for material {material}")
+        return
+
+    faces_to_select = []
+    for obj in selection:
         faces = [f for f in maya.sets(sg, q=True) or [] if f.startswith(obj + ".")]
-        maya.select(faces) if faces else print("No matching faces found.")
+        faces_to_select.extend(faces)
+
+    if faces_to_select:
+        maya.select(faces_to_select)
+    else:
+        maya.warning("No matching faces found on the selected objects.")
 
 
 def change_outliner_colour(colour):
-    COLOURS = {
-        "green": (0, 1, 0),
-        "red": (1, 0, 0),
-    }
+    COLOURS = {"green": (0, 1, 0), "red": (1, 0, 0), "blue": (0, 0, 1)}
 
     colour = colour.strip().lower()
     rgb = COLOURS.get(colour)
@@ -74,14 +86,17 @@ def change_outliner_colour(colour):
         maya.warning(f"Unknown colour: {colour}")
         return
 
-    root = maya.ls(selection=True, type="transform")
+    root = maya.ls(selection=True, type="transform", long=True)
     if not root:
         maya.warning("Select a group")
         return
 
     # only targeting direct children, not recursive.
-    root_children = maya.listRelatives(root[0], children=True, type="transform") or []
+    root_children = maya.listRelatives(root[0], children=True, type="transform", fullPath=True) or []
     for node in root_children:
         if not maya.listRelatives(node, shapes=True):
             maya.setAttr(f"{node}.useOutlinerColor", 1)
             maya.setAttr(f"{node}.outlinerColor", *rgb)
+
+    maya.setAttr(f"{root[0]}.useOutlinerColor", 1)
+    maya.setAttr(f"{root[0]}.outlinerColor", *rgb)
