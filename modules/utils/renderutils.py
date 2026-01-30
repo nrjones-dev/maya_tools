@@ -5,7 +5,7 @@ def append_diffuse_to_render_layers(suffix=None, skip_master_layer=True):
     """
     Appends a suffix to the names of render layers in Maya's Render Setup.
 
-    :param suffix: The suffix to append (default: "None")
+    :param suffix: The suffix to append (default: None)
     :param skip_master_layer: Whether to skip the defaultRenderLayer (default: True)
     :return: List of tuples (old_name, new_name) of renamed layers
     """
