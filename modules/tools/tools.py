@@ -1,35 +1,72 @@
 import maya.cmds as maya
 
+from .helpers import find_common_parent
+
 
 def clean_combine():
-    curr_selection = maya.ls(selection=True)
+    """
+    combines selected nodes, leaving them within their closest parent group or world.
+    """
+    curr_selection = maya.ls(selection=True, long=True)
+
+    if len(curr_selection) < 2:
+        maya.error("Invalid selection. Combine needs at least 2 objects.")
+        return
+
     try:
-        maya.polyUnite(curr_selection, constructionHistory=False)
-        maya.xform(centerPivots=True)
-        maya.warning("objects have been merged.")
+        combined = maya.polyUnite(curr_selection, ch=False)[0]
+
+        maya.xform(combined, centerPivots=True)
+        common_parent = find_common_parent(curr_selection)
+
+        if common_parent:
+            maya.parent(combined, common_parent)
+
+        maya.select(combined)
+        maya.inViewMessage(amg="Objects have been <h1>merged</h1>", pos="topCenter", fade=True)
     except RuntimeError:
-        maya.error("Invalid Selection. Combine needs at least 2 polygonal objects selected.")
+        maya.error("Combine Failed.")
 
 
-def clean_detach():
-    selection = maya.ls(selection=True)
-    # Ensure that the selection consists of faces
-    try:
-        if selection and all(".f[" in s for s in selection):
-            original_object = selection[0].split(".")[0]
+#### WORK IN PROGRESS ####
+# def clean_detach():
+#     """
+#     Extracts mesh with selected faces into new object(s), deletes the original, clears history and parents new objects to world
+#     """
+#     selection = maya.ls(selection=True, flatten=True)
+#     if not selection:
+#         maya.warning("No faces selected.")
+#         return
 
-            separated_objects = maya.polySeparate(original_object, rs=True, ch=False)
+#     if not all(".f[" in s for s in selection):
+#         maya.error("Please select only faces.")
+#         return
 
-            maya.parent(maya.ls(selection=True), world=True)
-            maya.delete(original_object, ch=False)
-            maya.select(separated_objects[:-1])
-            new_objects = maya.ls(selection=True)
-            for obj in new_objects:
-                maya.xform(centerPivots=True)
+#     original_object = selection[0].split(".")[0]
 
-            maya.warning("Faces have been separated into a new object")
-    except RuntimeError:
-        maya.error("Invalid Selection. Please select faces from a polygonal object.")
+#     if any(s.split(".")[0] != original_object for s in selection):
+#         maya.error("All selected faces must belong to the same object.")
+#         return
+
+#     try:
+#         separated_objects = maya.polySeparate(original_object, rs=True, ch=False)
+
+#         new_objects = separated_objects[:-1]
+#         for obj in new_objects:
+#             maya.xform(obj, centerPivots=True)
+#             maya.parent(obj, world=True)
+
+#         if maya.objExists(original_object):
+#             maya.delete(original_object, ch=True)
+
+#         new_group = maya.group(new_objects)
+#         maya.select(new_group)
+#         maya.inViewMessage(amg="Faces have been extracted into new object(s).", pos="topCenter", fade=True)
+
+#         return new_objects
+
+#     except RuntimeError as e:
+#         maya.error(f"Failed to separate faces: {e}.")
 
 
 def set_pivot_world_space():
@@ -49,10 +86,28 @@ def set_obj_world_space():
 
 
 def select_every_other_face():
-    shape = maya.ls(selection=True)
-    shape_faces = maya.ls(f"{shape[0]}.f[*]", flatten=True)
-    face_selection = maya.select(shape_faces[::2])
-    return face_selection
+    """
+    Selects every other face on the first selected mesh object.
+    """
+    selection = maya.ls(selection=True, transforms=True)
+    if not selection:
+        maya.warning("No objects selected.")
+        return
+
+    mesh_shapes = maya.listRelatives(selection[0], shapes=True, type="mesh", fullPath=True)
+    if not mesh_shapes:
+        maya.warning(f"No mesh found under {selection[0]}.")
+        return
+
+    shape = mesh_shapes[0]
+    shape_faces = maya.ls(f"{shape}.f[*]", flatten=True)
+    if not shape_faces:
+        maya.warning("No faces found on the selected mesh.")
+        return
+
+    every_other_face = shape_faces[::2]
+    maya.select(every_other_face)
+    return every_other_face
 
 
 def select_faces_with_material(material):
