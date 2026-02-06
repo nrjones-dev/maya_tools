@@ -29,44 +29,38 @@ def clean_combine():
 
 
 #### WORK IN PROGRESS ####
-# def clean_detach():
-#     """
-#     Extracts mesh with selected faces into new object(s), deletes the original, clears history and parents new objects to world
-#     """
-#     selection = maya.ls(selection=True, flatten=True)
-#     if not selection:
-#         maya.warning("No faces selected.")
-#         return
+def clean_detach():
+    selection = maya.ls(selection=True)
+    if not selection:
+        maya.warning("No object selected.")
+        return
 
-#     if not all(".f[" in s for s in selection):
-#         maya.error("Please select only faces.")
-#         return
+    faces = maya.filterExpand(sm=34)
+    if not faces:
+        maya.error("Please ensure you have selected faces.")
+        return
 
-#     original_object = selection[0].split(".")[0]
+    original_object = selection[0].split(".")[0]
+    original_pivot = maya.xform(original_object, query=True, rotatePivot=True, worldSpace=True)
 
-#     if any(s.split(".")[0] != original_object for s in selection):
-#         maya.error("All selected faces must belong to the same object.")
-#         return
+    if any(s.split(".")[0] != original_object for s in selection):
+        maya.error("All selected faces must belong to the same object.")
+        return
 
-#     try:
-#         separated_objects = maya.polySeparate(original_object, rs=True, ch=False)
+    try:
+        separated_objects = maya.polySeparate(original_object, rs=True, ch=False)
+        new_objects = separated_objects[:-1]
 
-#         new_objects = separated_objects[:-1]
-#         for obj in new_objects:
-#             maya.xform(obj, centerPivots=True)
-#             maya.parent(obj, world=True)
+        if len(new_objects) >= 2:
+            new_objects = maya.polyUnite(new_objects, ch=False)
+            maya.parent(new_objects, original_object)
 
-#         if maya.objExists(original_object):
-#             maya.delete(original_object, ch=True)
+        children = maya.listRelatives(original_object, children=True, type="transform") or []
+        for obj in children:
+            maya.xform(obj, rotatePivot=original_pivot, worldSpace=True)
 
-#         new_group = maya.group(new_objects)
-#         maya.select(new_group)
-#         maya.inViewMessage(amg="Faces have been extracted into new object(s).", pos="topCenter", fade=True)
-
-#         return new_objects
-
-#     except RuntimeError as e:
-#         maya.error(f"Failed to separate faces: {e}.")
+    except RuntimeError as e:
+        maya.error(f"Failed to separate faces: {e}")
 
 
 def set_pivot_world_space():
